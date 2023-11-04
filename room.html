@@ -19,26 +19,82 @@
 <!-- Peer JS -->
 <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
 <script>
-  const socket = io('http://localhost:3002/zoom')
+  // Room id 
+  const ROOM_ID = '100'
 
-  // Connect
+  const socket = io('http://localhost:3002/zoom')
+  const peer = new Peer(undefined, {
+    host: 'localhost',
+    port: '3001',
+    path: '/zoom'
+  })
+
+  // Connect to websocket
   socket.on("connect", () => {
     console.log(socket.id); 
     console.log(socket.connected);
   });
 
-  // Room id 
-  const ROOM_ID = '100'
-
-  // Random User id
-  const USER_ID = Math.floor(Math.random() * 10000)
-
-  // Join the room 
-  socket.emit('join-room', ROOM_ID, USER_ID)
-
-  // Another user join
-  socket.on('user-connected', userId => {
-    console.log('user-connected', userId)
+  // Connect to peer js
+  peer.on('open', USER_ID => {
+    socket.emit('join-room', ROOM_ID, USER_ID)
   })
-  
+
+  // Video Grid
+  const videoGrid = document.getElementById('video-grid')
+  const myVideo = document.createElement('video')
+  myVideo.muted = true
+
+  navigator.mediaDevices.getUserMedia({
+    video: true,
+    audio: true
+  }).then(stream => {
+    addVideoStream(myVideo, stream)
+
+    peer.on('call', call => {
+
+      // Get video from another user
+      call.answer(stream)
+
+      // Give video to another user
+      const video = document.createElement('video')
+
+      call.on('stream', stream => {
+        addVideoStream(video, stream)
+      })
+
+      // Close video if call is closed
+      call.on('close', () => {
+        video.remove()
+      })
+    })
+
+    // Another user join
+    socket.on('user-connected', USER_ID => {
+      connectToNewUser(USER_ID, stream)
+    })
+  })
+
+  // Add video stream from another user
+  function connectToNewUser(USER_ID, stream) {
+    const call = peer.call(USER_ID, stream)
+    const video = document.createElement('video')
+    call.on('stream', userVideoStream => {
+      addVideoStream(video, userVideoStream)
+    })
+
+    call.on('close', () => {
+      video.remove()
+    })
+  }
+
+  // Add self video stream function
+  function addVideoStream(video, stream) {
+    video.srcObject = stream
+    video.addEventListener('loadedmetadata', () => {
+      video.play()
+    })
+
+    videoGrid.append(video)
+  }
 </script>

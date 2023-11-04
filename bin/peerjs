@@ -1,6 +1,6 @@
 const PeerServer = require('peer').PeerServer;
 const port = 3001
-const path = '/'
+const path = '/zoom'
 const server = PeerServer({
   port: port,
   path: path
