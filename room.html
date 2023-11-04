@@ -28,6 +28,7 @@
     port: '3001',
     path: '/zoom'
   })
+  const peers = {} // buat handle ini nanti si peers ini simpen di server (database / redis)
 
   // Connect to websocket
   socket.on("connect", () => {
@@ -71,8 +72,16 @@
 
     // Another user join
     socket.on('user-connected', USER_ID => {
+      console.log(USER_ID)
       connectToNewUser(USER_ID, stream)
     })
+  })
+
+  // User disconnect
+  socket.on('user-disconnected', USER_ID => {
+    console.log(USER_ID)
+    console.log(peers)
+    if (peers[USER_ID]) peers[USER_ID].close()
   })
 
   // Add video stream from another user
@@ -86,6 +95,8 @@
     call.on('close', () => {
       video.remove()
     })
+
+    peers[USER_ID] = call
   }
 
   // Add self video stream function
@@ -97,4 +108,5 @@
 
     videoGrid.append(video)
   }
+  
 </script>
