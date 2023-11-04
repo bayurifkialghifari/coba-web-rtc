@@ -1,0 +1,44 @@
+<style>
+  #video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 300px);
+    grid-auto-rows: 300px;
+  }
+
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+</style>
+
+<div id="video-grid"></div>
+
+<!-- Socket io -->
+<script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin="anonymous"></script>
+<!-- Peer JS -->
+<script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
+<script>
+  const socket = io('http://localhost:3002/zoom')
+
+  // Connect
+  socket.on("connect", () => {
+    console.log(socket.id); 
+    console.log(socket.connected);
+  });
+
+  // Room id 
+  const ROOM_ID = '100'
+
+  // Random User id
+  const USER_ID = Math.floor(Math.random() * 10000)
+
+  // Join the room 
+  socket.emit('join-room', ROOM_ID, USER_ID)
+
+  // Another user join
+  socket.on('user-connected', userId => {
+    console.log('user-connected', userId)
+  })
+  
+</script>
